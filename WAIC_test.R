@@ -26,6 +26,17 @@ calc.marglike <- function(x){
   return(WAIC_ish)
 }
 
+calc.Dsel <- function(x){
+  vars <- grep("y.new", colnames(x$mcmc[[1]]))
+  y.save <- as.matrix(x$mcmc[,vars,]) 
+  y.mean <- apply(y.save,2,mean)
+  y.real <- c(jd.birds$y)
+  sum.1 <- sum((y.real-y.mean)^2) #want to minimize this
+  sum.2 <- sum(apply(y.save,2,var))
+  D_sel = sum.1+sum.2
+  return(D_sel)
+}
+
 
 modelstring.birds = "
   model 
@@ -37,9 +48,12 @@ for (i in 1:n.sites){
   for (t in 1:n.visit){
   logit(p[i,t]) <- alpha0 + alpha1*wind[i,t]*on[2]
   y[i,t] ~ dbin(p[i,t], N[i])
+  y.new[i,t] ~ dbin(p[i,t], N[i])
   loglike.waic[i,t] <- logdensity.bin(y[i,t], p[i,t], N[i])
   }
   loglike.new[i] <- sum(loglike.waic[i,])+log_N[i]
+  
+  
 }
 
 beta0 ~ dunif(-3,3)
@@ -85,10 +99,10 @@ alpha1_a <- -.5
 alpha0_b <- -.5
 alpha1_b <- -.5
 n.sites <- rep(c(15,25,50), each = 100)
-WAIC_rank1 <- jointlike_rank1 <- marglike_rank1<- WAIC_rank2 <- jointlike_rank2 <- marglike_rank2<- rep(NA, 300)
-WAIC_w1 <- jointlike_w1 <- marg_w1<- WAIC_w2 <- jointlike_w2 <- marg_w2 <- rep(NA, 300)
-top_waic1 <- top_waic2 <- top_jointlike1 <- top_jointlike2 <- top_marg1 <- top_marg2 <- rep(NA, 300)
-params <- c("loglike.waic", "loglike.new")
+WAIC_rank1 <- jointlike_rank1 <- marglike_rank1<- Dsel_rank1 <- WAIC_rank2 <- jointlike_rank2 <- marglike_rank2<- Dsel_rank2<- rep(NA, 300)
+WAIC_w1 <- jointlike_w1 <- marg_w1<- Dsel_w1 <- WAIC_w2 <- jointlike_w2 <- marg_w2 <- Dsel_w2 <- rep(NA, 300)
+top_waic1 <- top_waic2 <- top_jointlike1 <- top_jointlike2 <- top_marg1 <- top_marg2 <- top_Dsel1 <- top_Dsel2 <- rep(NA, 300)
+params <- c("loglike.waic", "loglike.new", "y.new")
 tree <- runif(50)
 tree <- scale(tree); attr(tree,"scaled:scale")<-NULL;attr(tree,"scaled:center")<-NULL
 wind <- runif(50*4, 0,15) # fake wind speeds
@@ -96,7 +110,7 @@ wind <- scale(wind)
 attr(wind,"scaled:center")<-NULL; attr(wind,"scaled:scale")<-NULL
 wind.mat <- matrix(wind, ncol = 4, byrow = 1)
 
-for (i in 276:300){
+for (i in 275:300){
 print(paste("I just started run #", i, sep = ""))
 beta.0[[i]] <- runif(1)
 beta.1[[i]] <- runif(1, min = -2, max = 2)
@@ -198,11 +212,12 @@ jags.marg4 <- run.jags(model = modelstring.marg,
 #### WAIC and Joint Likelihood Tables for Imperfect Detection Data ####
 mymodels <- mget(ls()[grep("jags.birds", ls())]) #grabs all models in environment
 margmodels <- mget(ls()[grep("jags.marg", ls())])
-WAIC <- jointlike <- marglike <-  data.frame(modname = 1:4, loglike = rep(NA, 4))
+WAIC <- jointlike <- marglike <-  Dsel <- data.frame(modname = 1:4, loglike = rep(NA, 4))
 for(k in 1:4){
   WAIC[k,2] <-  calc.waic(mymodels[[k]])
   jointlike[k,2] <- calc.jointlike(mymodels[[k]])
   marglike[k,2] <- calc.marglike(margmodels[[k]])
+  Dsel[k,2] <- calc.Dsel(mymodels[[k]])
 }
 
 WAIC$deltaWAIC <- WAIC$loglike-min(WAIC$loglike)
@@ -219,6 +234,14 @@ jointlike <- jointlike[order(-jointlike$weight),]
 jointlike_rank1[i] <- which(jointlike$modname == 1)
 jointlike_w1[i] <- jointlike$weight[jointlike_rank1[i]]
 top_jointlike1[i] <- jointlike[1,1]
+
+Dsel$deltaDsel <- Dsel$loglike-min(Dsel$loglike)
+Dsel$rel_like <- exp(-.5*Dsel$deltaDsel)
+Dsel$weight <- Dsel$rel_like/sum(Dsel$rel_like)
+Dsel <- Dsel[order(-Dsel$weight),]  
+Dsel_rank1[i] <- which(Dsel$modname == 1)
+Dsel_w1[i] <- Dsel$weight[Dsel_rank1[i]]
+top_Dsel1[i] <- Dsel[1,1]
 
 marglike$deltamarglike <- marglike$loglike-min(marglike$loglike)
 marglike$rel_like <- exp(-.5*marglike$deltamarglike)
@@ -318,11 +341,12 @@ j.margs4 <- run.jags(model = modelstring.marg,
 #### WAIC and Joint Likelihood Tables for Imperfect Detection Data ####
 mymodels2 <- mget(ls()[grep("jags.like_", ls())])
 margmodels2 <- mget(ls()[grep("j.marg", ls())])
-WAIC2 <- jointlike2 <- marglike2 <-  data.frame(modname = 1:4, loglike = rep(NA, 4))
+WAIC2 <- jointlike2 <- marglike2 <-  Dsel2 <-data.frame(modname = 1:4, loglike = rep(NA, 4))
 for(k in 1:4){
   WAIC2[k,2] <-  calc.waic(mymodels2[[k]])
   jointlike2[k,2] <- calc.jointlike(mymodels2[[k]])
   marglike2[k,2] <- calc.marglike(margmodels2[[k]])
+  Dsel2[k,2] <- calc.Dsel(mymodels2[[k]])
 }
 
 WAIC2$deltaWAIC <- WAIC2$loglike-min(WAIC2$loglike)
@@ -340,6 +364,14 @@ jointlike2 <- jointlike2[order(-jointlike2$weight),]
 jointlike_rank2[i] <- which(jointlike2$modname == 1)
 jointlike_w2[i] <- jointlike2$weight[jointlike_rank2[i]]
 top_jointlike2[i] <- jointlike2[1,1]
+
+Dsel2$deltaDsel <- Dsel2$loglike-min(Dsel2$loglike)
+Dsel2$rel_like <- exp(-.5*Dsel2$deltaDsel)
+Dsel2$weight <- Dsel2$rel_like/sum(Dsel2$rel_like)
+Dsel2 <- Dsel2[order(-Dsel2$weight),]  
+Dsel_rank2[i] <- which(Dsel2$modname == 1)
+Dsel_w2[i] <- Dsel2$weight[Dsel_rank2[i]]
+top_Dsel2[i] <- Dsel2[1,1]
 
 marglike2$deltamarglike <- marglike2$loglike-min(marglike2$loglike)
 marglike2$rel_like <- exp(-.5*marglike2$deltamarglike)
@@ -366,30 +398,36 @@ results <- data.frame(n.sim = 1:300, n.sites = n.sites,
                       WAIC_W1 = WAIC_w1, WAIC_W2 = WAIC_w2, 
                       jointlike_rank1 = jointlike_rank1, jointlike_rank2 =  jointlike_rank2,
                       jointlike_w1 = jointlike_w1, jointlike_w2 = jointlike_w2,
+                      Dsel_rank1 = Dsel_rank1, Dsel_rank2 =  Dsel_rank2,
+                      Dsel_w1 = Dsel_w1, Dsel_w2 = Dsel_w2,
                       marg_rank1 = marglike_rank1, marg_rank2 = marglike_rank2,
                       Marg_w1 = marg_w1, Marg_w2 = marg_w2,
                       topwaic_1 = top_waic1, topwaic_2 = top_waic2, 
                       topjoint_1 = top_jointlike1, topjoint_2 = top_jointlike2,
+                      topDsel_1 = top_Dsel1, topDsel_2 = top_Dsel2,
                       topmarg_1 = top_marg1, topmarg_2 = top_marg2 )
 
-dput(results2, "results.txt")
+#dput(results2, "results.txt")
 
 ###### Results #######
-setwd("~/Desktop/U_Georgia/Chandler_Meetings/WAIC_Musing")
+#setwd("~/Desktop/U_Georgia/Chandler_Meetings/WAIC_Musing/WAIC")
 results <- dget("results.txt")
 library(dplyr)
 results %>% 
   summarize(WAIC_rank1= sum(WAIC_rank1 == 1),
             WAICj_rank1= sum(jointlike_rank1 == 1),
             Marg_rank1 = sum(marg_rank1 == 1),
+            Dsel_rank1 = sum(Dsel_rank1 == 1),
             WAIC_rank2= sum(WAIC_rank2 == 1),
             WAICj_rank2= sum(jointlike_rank2 == 1),
-            Marg_rank2 = sum(marg_rank2 == 1)) 
+            Marg_rank2 = sum(marg_rank2 == 1),
+            Dsel_rank2 = sum(Dsel_rank2 == 1)) 
 
 results %>% 
   summarize(WAIC_rank1= sum(WAIC_rank1 == 1) + sum(WAIC_rank2 == 1),
       WAICj_rank1= sum(jointlike_rank1 == 1)+sum(jointlike_rank2 == 1),
-      Marg_rank1 = sum(marg_rank1 == 1) + sum(marg_rank2 == 1))
+      Marg_rank1 = sum(marg_rank1 == 1) + sum(marg_rank2 == 1),
+      Dsel_rank1 = sum(Dsel_rank1 == 1) + sum(Dsel_rank2 == 1))
 
 
 ranks <-   results %>% 
@@ -397,9 +435,11 @@ ranks <-   results %>%
   summarize(WAIC_rank1= sum(WAIC_rank1 == 1),
             WAICj_rank1= sum(jointlike_rank1 == 1),
             Marg_rank1 = sum(marg_rank1 == 1),
+            Dsel_rank1 = sum(Dsel_rank1 == 1),
             WAIC_rank2= sum(WAIC_rank2 == 1),
             WAICj_rank2= sum(jointlike_rank2 == 1),
-            Marg_rank2 = sum(marg_rank2 == 1)) 
+            Marg_rank2 = sum(marg_rank2 == 1),
+            Dsel_rank2 = sum(Dsel_rank2 == 1)) 
 ranks
 
 weights <-  results %>% 
@@ -410,16 +450,20 @@ weights <-  results %>%
             WAICj_sd1 = sd(jointlike_w1),
             Marg_weight1 = mean(Marg_w1),
             Marg_std1 = sd(Marg_w1),
+            Dsel_w1= mean(Dsel_w1),
+            Dsel_sd1 = sd(Dsel_w1),
             WAIC_w2= mean(WAIC_W2),
             WAIC_sd2 = sd(WAIC_W2),
             WAICj_w2= mean(jointlike_w2),
             WAICj_sd2 = sd(jointlike_w2),
             Marg_weight2 = mean(Marg_w2),
-            Marg_std2 = sd(Marg_w2)) 
+            Marg_std2 = sd(Marg_w2),
+            Dsel_w2= mean(Dsel_w2),
+            Dsel_sd2 = sd(Dsel_w2)) 
 
 weights
 
-gg.results <- data.frame(sites = paste(rep(results$n.sites,6), " sites", sep = ""), rank = c(results$topwaic_1, results$topwaic_2, results$topjoint_1, results$topjoint_2, results$topmarg_1, results$topmarg_2), Method = rep(c("WAIC", "WAICj", "Marg"), each = nrow(results)*2), detection = rep(c(rep("Low Detection", nrow(results)), rep("High Detection", nrow(results))), 3)) 
+gg.results <- data.frame(sites = paste(rep(results$n.sites,8), " sites", sep = ""), rank = c(results$topwaic_1, results$topwaic_2, results$topjoint_1, results$topjoint_2, results$topmarg_1, results$topmarg_2, results$topDsel_1, results$topDsel_2), Method = rep(c("WAIC", "WAICj", "Marg", "Dsel"), each = nrow(results)*2), detection = rep(c(rep("Low Detection", nrow(results)), rep("High Detection", nrow(results))), 4)) 
 head(gg.results)
 
 library(ggplot2)
@@ -447,12 +491,17 @@ pp<- tag_facet(pp, open = "", close = "",
 pp
 #ggsave("Ranking_WAIC.jpeg", pp, dpi = 400)
 
-par(mfrow = c(2,3))
-weights <- data.frame(n.sites = results$n.sites, WAICj = results$jointlike_w1, WAIC = results$WAIC_W1, marg = results$Marg_w1)
-boxplot(WAIC ~ n.sites, weights, ylim = c(0,1), main = "WAIC  \nImperf Det")
-boxplot(WAICj ~ n.sites, weights,ylim = c(0,1), main = "WAICj  \nImperf Det")
-boxplot(marg ~ n.sites, weights,ylim = c(0,1), main = "marg  \nImperf Det")
-weights2 <- data.frame(n.sites = results$n.sites, WAICj = results$jointlike_w2, WAIC = results$WAIC_W2, marg = results$Marg_w2)
-boxplot(WAIC ~ n.sites, weights2, ylim = c(0,1), main = "WAIC \nPerf Det")
-boxplot(WAICj ~ n.sites, weights2,ylim = c(0,1), main = "WAICj \nPerf Det")
-boxplot(marg ~ n.sites, weights2,ylim = c(0,1), main = "marg \nPerf Det")
+par(mfrow = c(2,4))
+weights <- data.frame(n.sites = results$n.sites, WAICj = results$jointlike_w1, WAIC = results$WAIC_W1, marg = results$Marg_w1, Dsel = results$Dsel_w1)
+boxplot(WAIC ~ n.sites, weights, ylim = c(0,1), main = "WAIC  \nLow Det")
+boxplot(WAICj ~ n.sites, weights,ylim = c(0,1), main = "WAICj  \nLow Det")
+boxplot(marg ~ n.sites, weights,ylim = c(0,1), main = "marg  \nLow Det")
+boxplot(Dsel ~ n.sites, weights,ylim = c(0,1), main = "Dsel  \nLow Det")
+weights2 <- data.frame(n.sites = results$n.sites, WAICj = results$jointlike_w2, WAIC = results$WAIC_W2, marg = results$Marg_w2, Dsel = results$Dsel_w2)
+boxplot(WAIC ~ n.sites, weights2, ylim = c(0,1), main = "WAIC \nHigh Det")
+boxplot(WAICj ~ n.sites, weights2,ylim = c(0,1), main = "WAICj \nHigh Det")
+boxplot(marg ~ n.sites, weights2,ylim = c(0,1), main = "marg \nHigh Det")
+boxplot(Dsel ~ n.sites, weights2,ylim = c(0,1), main = "Dsel \nHigh Det")
+
+
+

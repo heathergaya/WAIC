@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2019)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: WAIC_musing.aux
+The style file: plainnat.bst
+Database file #1: WAICj.bib
+You've used 4 entries,
+            2773 wiz_defined-function locations,
+            633 strings with 5811 characters,
+and the built_in function-call counts, 1947 in all, are:
+= -- 184
+> -- 91
+< -- 2
++ -- 31
+- -- 27
+* -- 173
+:= -- 308
+add.period$ -- 19
+call.type$ -- 4
+change.case$ -- 21
+chr.to.int$ -- 4
+cite$ -- 8
+duplicate$ -- 82
+empty$ -- 162
+format.name$ -- 33
+if$ -- 404
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 4
+newline$ -- 35
+num.names$ -- 16
+pop$ -- 28
+preamble$ -- 1
+purify$ -- 17
+quote$ -- 0
+skip$ -- 60
+stack$ -- 0
+substring$ -- 93
+swap$ -- 4
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 44
+warning$ -- 0
+while$ -- 17
+width$ -- 0
+write$ -- 73

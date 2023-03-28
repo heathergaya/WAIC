@@ -1,0 +1,41 @@
+\begin{thebibliography}{4}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Gelman et~al.(2014)Gelman, Hwang, and Vehtari]{Gelman_2014}
+Andrew Gelman, Jessica Hwang, and Aki Vehtari.
+\newblock Understanding predictive information criteria for bayesian models.
+\newblock \emph{STATISTICS AND COMPUTING}, 24\penalty0 (6):\penalty0 997--1016,
+  2014.
+\newblock ISSN 0960-3174.
+\newblock \doi{10.1007/s11222-013-9416-2}.
+
+\bibitem[Hooten and Hobbs(2015)]{Hooten_2015}
+M.~B. Hooten and N.~T. Hobbs.
+\newblock A guide to bayesian model selection for ecologists.
+\newblock \emph{Ecological Monographs}, 85\penalty0 (1):\penalty0 3--28, 2015.
+\newblock \doi{https://doi.org/10.1890/14-0661.1}.
+\newblock URL
+  \url{https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1890/14-0661.1}.
+
+\bibitem[Link et~al.(2020)Link, Sauer, and Niven]{Link_2020}
+William~A. Link, John~R. Sauer, and Daniel~K. Niven.
+\newblock Model selection for the north american breeding bird survey.
+\newblock \emph{Ecological Applications}, 30\penalty0 (6):\penalty0 e02137,
+  2020.
+\newblock \doi{https://doi.org/10.1002/eap.2137}.
+\newblock URL
+  \url{https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/eap.2137}.
+
+\bibitem[Watanabe(2010)]{Watanabe_2010}
+Sumio Watanabe.
+\newblock Asymptotic equivalence of bayes cross validation and widely
+  applicable information criterion in singular learning theory.
+\newblock \emph{Journal of Machine Learning Research}, 11\penalty0
+  (116):\penalty0 3571--3594, 2010.
+\newblock URL \url{http://jmlr.org/papers/v11/watanabe10a.html}.
+
+\end{thebibliography}
