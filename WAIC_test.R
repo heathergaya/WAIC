@@ -110,7 +110,7 @@ wind <- scale(wind)
 attr(wind,"scaled:center")<-NULL; attr(wind,"scaled:scale")<-NULL
 wind.mat <- matrix(wind, ncol = 4, byrow = 1)
 
-for (i in 275:300){
+for (i in 1:300){
 print(paste("I just started run #", i, sep = ""))
 beta.0[[i]] <- runif(1)
 beta.1[[i]] <- runif(1, min = -2, max = 2)
@@ -251,9 +251,9 @@ marglike_rank1[i] <- which(marglike$modname == 1)
 marg_w1[i] <- marglike$weight[marglike_rank1[i]]
 top_marg1[i] <- marglike[1,1]
 
-##### Perfect detection ####
+##### High detection ####
 ##### Params2 ####
-print(paste("I just started Perfect Detection models for run #", i, sep = ""))
+print(paste("I just started High Detection models for run #", i, sep = ""))
 
 jd.birds2 <- list(y = as.matrix(birds2[,c("Visit1", "Visit2", "Visit3", "Visit4")]),
                  wind = as.matrix(birds2[,c("Wind1", "Wind2", "Wind3", "Wind4")]),
