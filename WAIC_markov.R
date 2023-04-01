@@ -103,6 +103,16 @@ wind <- scale(wind)
 attr(wind,"scaled:center")<-NULL; attr(wind,"scaled:scale")<-NULL
 wind.mat <- array(wind, dim = c(n.sites, 4, n.years)) #sites, visits, years 
 
+WAIC_rank1 <- jointlike_rank1 <- jointlike2_rank1<- Dsel_rank1 <- WAIC_rank2 <- jointlike_rank2 <- jointlike2_rank2 <- Dsel_rank2<- rep(NA, 100)
+WAIC_w1 <- jointlike_w1 <- jointlike2_w1<- Dsel_w1 <- WAIC_w2 <- jointlike_w2 <- jointlike2_w2 <- Dsel_w2 <- rep(NA, 100)
+top_waic1 <- top_waic2 <- top_jointlike1 <- top_jointlike2 <- top_jointlike21 <- top_jointlike22 <- top_Dsel1 <- top_Dsel2 <- rep(NA, 100)
+
+
+WAIC_rank1b <- jointlike_rank1b <- jointlike2_rank1b <- Dsel_rank1b <- WAIC_rank2b <- jointlike_rank2b <- jointlike2_rank2b <- Dsel_rank2b <- rep(NA, 100)
+WAIC_w1b <- jointlike_w1b <- jointlike2_w1b <- Dsel_w1b <- WAIC_w2b <- jointlike_w2b <- jointlike2_w2b <- Dsel_w2b <- rep(NA, 100)
+top_waic1b <- top_waic2b <- top_jointlike1b <- top_jointlike2b <- top_jointlike21b <- top_jointlike22b <- top_Dsel1b <- top_Dsel2b <- rep(NA, 100)
+
+
 for(i in 1:100){
 print(paste("I just started run #", i, sep = ""))
 beta.0[[i]] <- runif(1)
@@ -139,10 +149,6 @@ detect1[[i]] <- det
 detect2[[i]] <- det2
 detect1b[[i]] <- detb
 detect2b[[i]] <- det2b
-
-WAIC_rank1 <- jointlike_rank1 <- jointlike2_rank1<- Dsel_rank1 <- WAIC_rank2 <- jointlike_rank2 <- jointlike2_rank2 <- Dsel_rank2<- rep(NA, 300)
-WAIC_w1 <- jointlike_w1 <- jointlike2_w1<- Dsel_w1 <- WAIC_w2 <- jointlike_w2 <- jointlike2_w2 <- Dsel_w2 <- rep(NA, 300)
-top_waic1 <- top_waic2 <- top_jointlike1 <- top_jointlike2 <- top_jointlike21 <- top_jointlike22 <- top_Dsel1 <- top_Dsel2 <- rep(NA, 300)
 
 #### Small Time Trend ########
 ##### imperfect detection ####
@@ -322,10 +328,6 @@ top_Dsel2[i] <- Dsel2[1,1]
 
 #### End of small time trend models. 
 ##### Large Time Trend #######
-
-WAIC_rank1b <- jointlike_rank1b <- jointlike2_rank1b <- Dsel_rank1b <- WAIC_rank2b <- jointlike_rank2b <- jointlike2_rank2b <- Dsel_rank2b <- rep(NA, 300)
-WAIC_w1b <- jointlike_w1b <- jointlike2_w1b <- Dsel_w1b <- WAIC_w2b <- jointlike_w2b <- jointlike2_w2b <- Dsel_w2b <- rep(NA, 300)
-top_waic1b <- top_waic2b <- top_jointlike1b <- top_jointlike2b <- top_jointlike21b <- top_jointlike22b <- top_Dsel1b <- top_Dsel2b <- rep(NA, 300)
 
 ##### imperfect detection ####
 #### Params ####
@@ -524,7 +526,7 @@ results_weaktrend <- data.frame(n.sim = 1:100, n.sites = n.sites,
                       Dsel_rank1 = Dsel_rank1, Dsel_rank2 =  Dsel_rank2,
                       Dsel_w1 = Dsel_w1, Dsel_w2 = Dsel_w2,
                       jointlike2rank1 = jointlike2_rank1, jointlike2rank2 = jointlike2_rank2,
-                      jointlike2w1 = jointlike2w1, jointlike2w2 = jointlike2w2,
+                      jointlike2_w1 = jointlike2_w1, jointlike2_w2 = jointlike2_w2,
                       topwaic_1 = top_waic1, topwaic_2 = top_waic2, 
                       topjoint_1 = top_jointlike1, topjoint_2 = top_jointlike2,
                       topDsel_1 = top_Dsel1, topDsel_2 = top_Dsel2,
@@ -540,7 +542,7 @@ results_strongtrend <- data.frame(n.sim = 1:100, n.sites = n.sites,
                                   Dsel_rank1b = Dsel_rank1b, Dsel_rank2b =  Dsel_rank2b,
                                   Dsel_w1b = Dsel_w1b, Dsel_w2b = Dsel_w2b,
                                   jointlike2rank1b = jointlike2_rank1b, jointlike2rank2b = jointlike2_rank2b,
-                                  jointlike2w1b = jointlike2w1b, jointlike2w2b = jointlike2w2b,
+                                  jointlike2_w1b = jointlike2_w1b, jointlike2_w2b = jointlike2_w2b,
                                   topwaic_1b = top_waic1b, topwaic_2b = top_waic2b, 
                                   topjoint_1b = top_jointlike1b, topjoint_2b = top_jointlike2b,
                                   topDsel_1b = top_Dsel1b, topDsel_2b = top_Dsel2b,
@@ -548,8 +550,89 @@ results_strongtrend <- data.frame(n.sim = 1:100, n.sites = n.sites,
 
 dput(results_strongtrend, "results_strongtrend.txt")
 
+######## Look at results ######
+results <- dget("results_weaktrend.txt")
+results_s <- dget("results_strongtrend.txt")
+head(results)
+library(dplyr)
+#weak trend, how often correct model chosen:
+results %>% 
+  summarize(WAIC_rank1= sum(WAIC_rank1 == 1),
+            WAICj_rank1= sum(jointlike_rank1 == 1),
+            WAICj2_rank1 = sum(jointlike2rank1 == 1),
+            Dsel_rank1 = sum(Dsel_rank1 == 1),
+            WAIC_rank2= sum(WAIC_rank2 == 1),
+            WAICj_rank2= sum(jointlike_rank2 == 1),
+            WAICj2_rank2 = sum(jointlike2rank2 == 1),
+            Dsel_rank2 = sum(Dsel_rank2 == 1)) 
+#strong trend, how often correct model chosen:
+results_s %>% 
+  summarize(WAIC_rank1b= sum(WAIC_rank1b == 1),
+            WAICj_rank1b= sum(jointlike_rank1b == 1),
+            WAICj2_rank1b = sum(jointlike2rank1b == 1),
+            Dsel_rank1b = sum(Dsel_rank1b == 1),
+            WAIC_rank2b= sum(WAIC_rank2b == 1),
+            WAICj_rank2b= sum(jointlike_rank2b == 1),
+            WAICj2_rank2b = sum(jointlike2rank2b == 1),
+            Dsel_rank2b = sum(Dsel_rank2b == 1)) 
 
+#weak trend,
 
+weights <-  results %>% 
+  summarize(WAIC_w1= mean(WAIC_W1),
+            WAIC_sd1 = sd(WAIC_W1),
+            WAICj_w1= mean(jointlike_w1),
+            WAICj_sd1 = sd(jointlike_w1),
+            WAICj_alt_w1 = mean(jointlike2_w1),
+            WAICj_alt_std1 = sd(jointlike2_w1),
+            Dsel_w1= mean(Dsel_w1),
+            Dsel_sd1 = sd(Dsel_w1),
+            WAIC_w2= mean(WAIC_W2),
+            WAIC_sd2 = sd(WAIC_W2),
+            WAICj_w2= mean(jointlike_w2),
+            WAICj_sd2 = sd(jointlike_w2),
+            WAICj_alt_w2 = mean(jointlike2_w2),
+            WAICj_alt_std2 = sd(jointlike2_w2),
+            Dsel_w2= mean(Dsel_w2),
+            Dsel_sd2 = sd(Dsel_w2)) 
+
+round(weights, digits = 2)
+
+#strong trend,
+
+weights_s <-  results_s %>% 
+  summarize(WAIC_w1b= mean(WAIC_W1b),
+            WAIC_sd1b = sd(WAIC_W1b),
+            WAICj_w1b= mean(jointlike_w1b),
+            WAICj_sd1b = sd(jointlike_w1b),
+            WAICj_alt_w1b = mean(jointlike2_w1b),
+            WAICj_alt_std1b = sd(jointlike2_w1b),
+            Dsel_w1b= mean(Dsel_w1b),
+            Dsel_sd1b = sd(Dsel_w1b),
+            WAIC_w2b= mean(WAIC_W2b),
+            WAIC_sd2b = sd(WAIC_W2b),
+            WAICj_w2b= mean(jointlike_w2b),
+            WAICj_sd2b = sd(jointlike_w2b),
+            WAICj_alt_w2b = mean(jointlike2_w2b),
+            WAICj_alt_std2b = sd(jointlike2_w2b),
+            Dsel_w2b= mean(Dsel_w2b),
+            Dsel_sd2b = sd(Dsel_w2b)) 
+
+round(weights_s, digits = 2)
+
+allres <- cbind(results, results_s) #includes alternate way to calculate WAICj, but ignoring it
+all_weights <- data.frame(Det = rep(rep(rep(c("Low Det", "High Det"), each = 100),2),3),
+                          Trend = rep(rep(c("Weak Trend", "Strong Trend"), each = 200),3),
+                          metric = rep(c("WAIC", "WAICj", "Dsel"), each = 400),
+                          weight = c(allres$WAIC_W1, allres$WAIC_W2,allres$WAIC_W1b, allres$WAIC_W2b,
+                                     allres$jointlike_w1, allres$jointlike_w2, allres$jointlike_w1b, allres$jointlike_w2b,
+                                     allres$Dsel_w1, allres$Dsel_w2, allres$Dsel_w1b, allres$Dsel_w2b))
+library(ggplot2)
+ggplot(all_weights, aes(x = metric, y = weight))+
+  geom_boxplot()+
+  facet_wrap(~Trend+Det)+
+  theme_classic()
+ggsave("Weights_TemporalTrend.jpeg")
 
 ######## unused  ####
 # modelstring.birds_dm = "
